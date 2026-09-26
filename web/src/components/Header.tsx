@@ -51,7 +51,7 @@ export default function Header() {
 
   const getLinkClasses = (path: string) => {
     const isActive = pathname === path || (pathname === '/' && path === '/#shop');
-    return `px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
+    return `px-3 py-1.5 md:px-6 md:py-2.5 rounded-full text-[11px] md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
       isActive 
         ? "text-white bg-black shadow-[0_2px_10px_rgba(0,0,0,0.3)]" 
         : "text-zinc-400 hover:text-white hover:bg-black/50"
@@ -104,27 +104,27 @@ export default function Header() {
         isScrolled ? "bg-white/80 backdrop-blur-md border-b border-black/10 shadow-sm" : "bg-transparent"
       }`}
     >
-      <div className="w-full mx-auto px-6 md:px-12 h-24 flex items-center justify-between relative">
+      <div className="w-full mx-auto px-4 md:px-12 py-3 md:py-0 md:h-24 flex flex-wrap md:flex-nowrap items-center justify-between relative">
         {/* Logo and Name (Pushed Left) - Black Branding */}
-        <Link href="/" className="flex items-center gap-3 group relative z-10">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 transition-transform duration-500 group-hover:scale-105 border-2 border-black">
+        <Link href="/" className="flex items-center gap-2 md:gap-3 group relative z-10 w-auto">
+          <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden shrink-0 transition-transform duration-500 group-hover:scale-105 border-2 border-black">
             <Image src="/logo.jpg" alt="PickNwear Logo" fill className="object-cover" />
           </div>
-          <span className="font-bold text-2xl tracking-tight text-black transition-colors">
+          <span className="font-bold text-xl md:text-2xl tracking-tight text-black transition-colors hidden sm:block">
             PickNwear
           </span>
         </Link>
 
         {/* Central Dark Glass Navigation */}
-        <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 px-2 py-2 rounded-full bg-black/90 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-10 transition-all duration-300 hover:bg-black">
+        <nav className="order-last md:order-none w-full md:w-auto mt-3 md:mt-0 flex items-center justify-center gap-1 md:gap-2 px-1 md:px-2 py-1 md:py-2 rounded-full bg-black/90 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-10 transition-all duration-300 hover:bg-black md:absolute md:left-1/2 md:-translate-x-1/2 overflow-x-auto no-scrollbar">
           <Link href="/" className={getLinkClasses("/")}>Home</Link>
           <Link href="/collections" className={getLinkClasses("/collections")}>Collections</Link>
-          <button onClick={handleOpenContact} className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 text-zinc-400 hover:text-white hover:bg-black/50">Contact</button>
+          <button onClick={handleOpenContact} className="px-3 py-1.5 md:px-6 md:py-2.5 rounded-full text-[11px] md:text-sm font-semibold transition-all duration-300 text-zinc-400 hover:text-white hover:bg-black/50 whitespace-nowrap">Contact</button>
           <Link href="/admin" className={getLinkClasses("/admin")}>Admin</Link>
         </nav>
 
         {/* Actions (Pushed Right) - Solid Black Icons */}
-        <div className="flex items-center gap-6 text-black relative z-10">
+        <div className="flex items-center gap-3 md:gap-6 text-black relative z-10 w-auto justify-end">
           {user ? (
             <div className="relative flex items-center gap-3">
               <span className="text-sm font-semibold hidden md:block text-black">Hi, {user.name.split(' ')[0]}</span>
@@ -264,10 +264,10 @@ export default function Header() {
           <button 
             onClick={() => setIsCartOpen(true)}
             aria-label="Cart" 
-            className="h-10 px-4 flex items-center justify-center gap-2 rounded-full bg-black text-white hover:bg-zinc-800 hover:scale-105 transition-all shadow-md"
+            className="h-10 px-3 md:px-4 flex items-center justify-center gap-1.5 md:gap-2 rounded-full bg-black text-white hover:bg-zinc-800 hover:scale-105 transition-all shadow-md"
           >
-            <ShoppingBag size={20} />
-            <span className="text-sm font-bold bg-white text-black px-2 py-0.5 rounded-full">{totalItems}</span>
+            <ShoppingBag size={18} className="md:w-5 md:h-5" />
+            <span className="text-xs md:text-sm font-bold bg-white text-black px-1.5 md:px-2 py-0.5 rounded-full">{totalItems}</span>
           </button>
         </div>
       </div>

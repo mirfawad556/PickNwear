@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  allowedDevOrigins: [
+    'picknwear-mirfawad-1234.loca.lt', 
+    'https://picknwear-mirfawad-1234.loca.lt'
+  ],
 };
 
 export default nextConfig;
