@@ -1,18 +1,31 @@
 "use server";
 
 import fs from 'fs/promises';
+import { existsSync, copyFileSync } from 'fs';
+import os from 'os';
 import path from 'path';
 import { cookies } from 'next/headers';
 
-const DB_PATH = path.join(process.cwd(), 'local-db.json');
+const LOCAL_DB = path.join(process.cwd(), 'local-db.json');
+const TMP_DB = path.join(os.tmpdir(), 'local-db.json');
+
+function getDBPath() {
+  if (process.env.VERCEL === '1') {
+    if (!existsSync(TMP_DB) && existsSync(LOCAL_DB)) {
+      copyFileSync(LOCAL_DB, TMP_DB);
+    }
+    return TMP_DB;
+  }
+  return LOCAL_DB;
+}
 
 async function getDB(retries = 3): Promise<any> {
   try {
-    const data = await fs.readFile(DB_PATH, 'utf-8');
+    const data = await fs.readFile(getDBPath(), 'utf-8');
     const parsed = JSON.parse(data);
     if (!parsed.carts) {
       parsed.carts = {}; // userId -> cart items array
-      try { await fs.writeFile(DB_PATH, JSON.stringify(parsed, null, 2)); } catch(e) {}
+      try { await fs.writeFile(getDBPath(), JSON.stringify(parsed, null, 2)); } catch(e) {}
     }
     return parsed;
   } catch (error: any) {
@@ -26,7 +39,7 @@ async function getDB(retries = 3): Promise<any> {
 
 async function saveDB(data: any, retries = 3): Promise<void> {
   try {
-    await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
+    await fs.writeFile(getDBPath(), JSON.stringify(data, null, 2));
   } catch (error) {
     if (retries > 0) {
       await new Promise(res => setTimeout(res, 150));
