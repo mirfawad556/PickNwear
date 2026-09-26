@@ -1,0 +1,169 @@
+{
+  "admin": {
+    "id": "admin-1",
+    "username": "PickNwear",
+    "password": "$2b$10$iHqD7oQVUwSJrySxGPgTyu0qr3KhOIRaT4.gEuDnrjibNvxsy3GUG",
+    "isFirstLogin": true,
+    "whatsapp": null
+  },
+  "products": [
+    {
+      "id": "1790418373313",
+      "name": "gtg",
+      "category": "Male",
+      "price": 456,
+      "discountPercent": 10,
+      "clothingType": "fd",
+      "colors": "white",
+      "specialOffers": "cz",
+      "description": "zcd dxf sddf",
+      "image": "/uploads/product-1790418373313.png",
+      "createdAt": "2026-09-26T10:26:13.314Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "user-1790374285915",
+      "name": "mir fawad",
+      "email": "mirfawad1@gmail.com",
+      "password": "$2b$10$h2TMXbrbg4ixwMB6cEI0jOO7KOZLSiH1RLVeGVrqsOYrjNlzmP3OO",
+      "createdAt": "2026-09-25T22:11:25.916Z",
+      "address": "LPU GH05",
+      "totalItemsBought": 4,
+      "totalSpent": 6697
+    },
+    {
+      "id": "user-1790439227717",
+      "name": "Mir Fawad",
+      "email": "mirfawad556@gmail.com",
+      "password": "$2b$10$/D7vutLHIj3eL0mZnojKbuxJlAYEWcj3CC11xg8lj9JlCkzCWG1.q",
+      "createdAt": "2026-09-26T16:13:47.717Z",
+      "address": "youtbe",
+      "totalItemsBought": 5,
+      "totalSpent": 8296
+    }
+  ],
+  "carts": {
+    "user-1790439227717": [],
+    "user-1790374285915": [
+      {
+        "id": "17904506197689hlsmb1nj",
+        "productId": "eid-1",
+        "name": "Luxury Eid Dress (Front)",
+        "price": 1999,
+        "image": "/eid1.jpg",
+        "quantity": 1
+      }
+    ]
+  },
+  "orders": [
+    {
+      "id": "order-1790449702089",
+      "userId": "user-1790439227717",
+      "userName": "Mir Fawad",
+      "userEmail": "mirfawad556@gmail.com",
+      "address": "youtbe",
+      "items": [
+        {
+          "id": "1790448978768udlsculn0",
+          "productId": "1",
+          "name": "Forest Green Drop Shoulder",
+          "price": 899,
+          "image": "/product1.jpg",
+          "quantity": 1
+        },
+        {
+          "id": "1790448987539tyz1283r6",
+          "productId": "2",
+          "name": "Classic White Drop Shoulder",
+          "price": 899,
+          "image": "/product2.png",
+          "quantity": 1
+        },
+        {
+          "id": "1790448994492h2ts7g7pt",
+          "productId": "3",
+          "name": "Luxury Eid Dress",
+          "price": 1999,
+          "image": "/eid1.jpg",
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 3797,
+      "status": "pending",
+      "createdAt": "2026-09-26T19:08:22.089Z"
+    },
+    {
+      "id": "order-1790449831011",
+      "userId": "user-1790439227717",
+      "userName": "Mir Fawad",
+      "userEmail": "mirfawad556@gmail.com",
+      "address": "youtbe",
+      "items": [
+        {
+          "id": "1790449812353",
+          "productId": "eid-1",
+          "name": "Luxury Eid Dress (Front)",
+          "price": 1999,
+          "image": "/eid1.jpg",
+          "quantity": 1
+        },
+        {
+          "id": "1790449814232",
+          "productId": "velvet-1",
+          "name": "Marble Crush Velvet Pherans",
+          "price": 2500,
+          "image": "/velvet.jpg",
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 4499,
+      "status": "pending",
+      "createdAt": "2026-09-26T19:10:31.011Z"
+    },
+    {
+      "id": "order-1790450472906",
+      "userId": "user-1790374285915",
+      "userName": "mir fawad",
+      "userEmail": "mirfawad1@gmail.com",
+      "address": "LPU GH05",
+      "items": [
+        {
+          "id": "1790450414104jeer7hfye",
+          "productId": "2",
+          "name": "Classic White Drop Shoulder",
+          "price": 899,
+          "image": "/product2.png",
+          "quantity": 1
+        },
+        {
+          "id": "17904504188453hqobnpm8",
+          "productId": "velvet-1",
+          "name": "Marble Crush Velvet Pherans",
+          "price": 2500,
+          "image": "/velvet.jpg",
+          "quantity": 1
+        },
+        {
+          "id": "1790450429020gpwgzlkky",
+          "productId": "8",
+          "name": "Classic Washed Denim",
+          "price": 1999,
+          "image": "/jeans.webp",
+          "quantity": 1
+        },
+        {
+          "id": "1790450432960rky7wdp7z",
+          "productId": "10",
+          "name": "Pastel Striped Oxford Shirts",
+          "price": 1299,
+          "image": "/polo_shirts.jpg",
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 6697,
+      "status": "pending",
+      "createdAt": "2026-09-26T19:21:12.906Z"
+    }
+  ]
+}
