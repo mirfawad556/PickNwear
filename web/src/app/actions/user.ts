@@ -160,7 +160,8 @@ export async function mockSendResetEmail(email: string) {
     const EMAIL_PASS = process.env.EMAIL_APP_PASSWORD;
 
     if (!EMAIL_USER || !EMAIL_PASS) {
-      throw new Error("SMTP credentials missing. Please add EMAIL_USER and EMAIL_APP_PASSWORD to your .env file in the root of the web folder.");
+      console.warn("SMTP credentials missing.");
+      return { success: false, message: "Email service is not configured on this server yet. (SMTP credentials missing)" };
     }
 
     const transporter = nodemailer.createTransport({
