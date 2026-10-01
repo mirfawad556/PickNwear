@@ -93,17 +93,18 @@ export default function Header() {
   };
 
   return (
-    <motion.header
-      variants={{
-        visible: { y: 0 },
-        hidden: { y: "-100%" },
-      }}
-      animate={hidden ? "hidden" : "visible"}
-      transition={{ duration: 0.35, ease: "easeInOut" }}
-      className={`fixed top-0 inset-x-0 z-40 transition-colors duration-300 ${
-        isScrolled ? "bg-white/80 backdrop-blur-md border-b border-black/10 shadow-sm" : "bg-transparent"
-      }`}
-    >
+    <>
+      <motion.header
+        variants={{
+          visible: { y: 0 },
+          hidden: { y: "-100%" },
+        }}
+        animate={hidden ? "hidden" : "visible"}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
+        className={`fixed top-0 inset-x-0 z-40 transition-colors duration-300 ${
+          isScrolled ? "bg-white/80 backdrop-blur-md border-b border-black/10 shadow-sm" : "bg-transparent"
+        }`}
+      >
       <div className="w-full mx-auto px-4 md:px-12 py-3 md:py-0 md:h-24 flex flex-wrap md:flex-nowrap items-center justify-between relative">
         {/* Logo and Name (Pushed Left) - Black Branding */}
         <Link href="/" className="flex items-center gap-2 md:gap-3 group relative z-10 w-auto">
@@ -271,6 +272,7 @@ export default function Header() {
           </button>
         </div>
       </div>
+      </motion.header>
 
       {/* PAST ORDERS MODAL */}
       <AnimatePresence>
@@ -431,6 +433,6 @@ export default function Header() {
           </div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </>
   );
 }
