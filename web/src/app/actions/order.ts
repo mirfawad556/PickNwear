@@ -1,103 +1,54 @@
 "use server";
 
-import fs from 'fs/promises';
-import { existsSync, copyFileSync } from 'fs';
-import os from 'os';
-import path from 'path';
 import { cookies } from 'next/headers';
 import nodemailer from 'nodemailer';
+import prisma from "@/lib/prisma";
 
-const LOCAL_DB = path.join(process.cwd(), 'local-db.json');
-const TMP_DB = path.join(os.tmpdir(), 'local-db.json');
-
-function getDBPath() {
-  // Use /tmp only in production (Vercel) to avoid EROFS, keep local-db.json in development
-  const isVercel = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
-  if (isVercel) {
-    if (!existsSync(TMP_DB) && existsSync(LOCAL_DB)) {
-      try { copyFileSync(LOCAL_DB, TMP_DB); } catch(e) {}
-    }
-    return TMP_DB;
-  }
-  return LOCAL_DB;
-}
-
-async function getDB(retries = 3): Promise<any> {
-  try {
-    const data = await fs.readFile(getDBPath(), 'utf-8');
-    const parsed = JSON.parse(data);
-    if (!parsed.orders) parsed.orders = [];
-    return parsed;
-  } catch (error: any) {
-    if (retries > 0) {
-      await new Promise(res => setTimeout(res, 150));
-      return getDB(retries - 1);
-    }
-    throw error;
-  }
-}
-
-async function saveDB(data: any, retries = 3): Promise<void> {
-  try {
-    await fs.writeFile(getDBPath(), JSON.stringify(data, null, 2));
-  } catch (error) {
-    if (retries > 0) {
-      await new Promise(res => setTimeout(res, 150));
-      return saveDB(data, retries - 1);
-    }
-    throw error;
-  }
-}
-
-export async function placeOrder(cart: any[], address: string, totalAmount: number) {
+export async function createOrder(orderData: any) {
   try {
     const cookieStore = await cookies();
     const userId = cookieStore.get("user_session")?.value;
-    if (!userId) return { success: false, message: "Not logged in" };
 
-    const db = await getDB();
-    const user = db.users.find((u: any) => u.id === userId);
-    if (!user) return { success: false, message: "User not found" };
+    const orderNumber = "ORD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+    
+    // Create the order with its items
+    const order = await prisma.order.create({
+      data: {
+        orderNumber,
+        userId: userId || null,
+        total: orderData.total,
+        paymentMethod: orderData.paymentMethod,
+        address: orderData.address,
+        phone: orderData.phone || "",
+        customerName: orderData.firstName + " " + orderData.lastName,
+        customerEmail: orderData.email,
+        items: {
+          create: orderData.items.map((item: any) => ({
+            productId: item.productId || "unknown", // Fallback if local product doesn't exist in DB
+            quantity: item.quantity,
+            price: item.price,
+            size: item.size || null
+          }))
+        }
+      },
+      include: {
+        items: true
+      }
+    });
 
-    const newOrder = {
-      id: "order-" + Date.now(),
-      userId: user.id,
-      userName: user.name,
-      userEmail: user.email,
-      address,
-      items: cart,
-      totalAmount,
-      status: "pending",
-      createdAt: new Date().toISOString()
-    };
-
-    if (!db.orders) db.orders = [];
-    db.orders.push(newOrder);
-
-    // Update user stats
-    user.totalItemsBought = (user.totalItemsBought || 0) + cart.reduce((sum: number, item: any) => sum + item.quantity, 0);
-    user.totalSpent = (user.totalSpent || 0) + totalAmount;
-
-    // Clear user's cart
-    if (db.carts && db.carts[userId]) {
-      db.carts[userId] = [];
+    // Clear cart if logged in
+    if (userId) {
+      await prisma.cartItem.deleteMany({
+        where: { userId }
+      });
     }
 
-    await saveDB(db);
+    // Attempt to send email
+    const EMAIL_USER = process.env.EMAIL_USER;
+    const EMAIL_PASS = process.env.EMAIL_APP_PASSWORD;
 
-    // Notify Admin
-    const adminEmail = db.admin?.email || process.env.EMAIL_USER;
-    const adminPhone = db.admin?.whatsapp;
-
-    if (adminPhone) {
-      console.log(`[NOTIFICATION SYSTEM] Sending SMS/WhatsApp to Admin (${adminPhone}): New Order ${newOrder.id} placed by ${user.name} for ₹${totalAmount}.`);
-    }
-
-    try {
-      const EMAIL_USER = process.env.EMAIL_USER;
-      const EMAIL_PASS = process.env.EMAIL_APP_PASSWORD;
-
-      if (EMAIL_USER && EMAIL_PASS && adminEmail) {
+    if (EMAIL_USER && EMAIL_PASS) {
+      try {
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
@@ -107,42 +58,67 @@ export async function placeOrder(cart: any[], address: string, totalAmount: numb
         });
 
         await transporter.sendMail({
-          from: `"PickNwear Orders" <${EMAIL_USER}>`,
-          to: adminEmail,
-          subject: `New Order Received - ${newOrder.id}`,
+          from: `"PickNwear" <${EMAIL_USER}>`,
+          to: orderData.email,
+          subject: `Order Confirmation - ${orderNumber}`,
           html: `
-            <h3>New Order from ${user.name}</h3>
-            <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
-            <p><strong>Address:</strong> ${address}</p>
-            <p><strong>Items:</strong> ${cart.map((item: any) => item.quantity + 'x ' + item.name).join(', ')}</p>
-            <p>Check the admin dashboard for details.</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Thank you for your order, ${orderData.firstName}!</h2>
+              <p>Your order <strong>${orderNumber}</strong> has been received and is being processed.</p>
+              <h3>Order Total: Rs ${orderData.total.toLocaleString()}</h3>
+              <p>Payment Method: ${orderData.paymentMethod}</p>
+              <br/>
+              <p>We will notify you when it ships!</p>
+            </div>
           `
         });
-        console.log(`[NOTIFICATION SYSTEM] Email sent to Admin (${adminEmail}) for order ${newOrder.id}.`);
+      } catch (e) {
+        console.warn("Failed to send email", e);
       }
-    } catch (e) {
-      console.error("Failed to send admin notification email", e);
     }
 
-    return { success: true, orderId: newOrder.id };
+    return { success: true, orderId: order.orderNumber };
   } catch (error: any) {
     return { success: false, message: error.message };
   }
 }
 
-export async function getUserPastOrders() {
+export async function getUserOrders() {
   try {
     const cookieStore = await cookies();
     const userId = cookieStore.get("user_session")?.value;
     if (!userId) return { success: false, message: "Not logged in" };
 
-    const db = await getDB();
-    const userOrders = (db.orders || []).filter((o: any) => o.userId === userId);
-    
-    // Sort descending by date
-    userOrders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const orders = await prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: {
+          include: { product: true }
+        }
+      }
+    });
 
-    return { success: true, orders: userOrders };
+    return { success: true, orders };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
+export async function getOrder(orderNumber: string) {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { orderNumber },
+      include: {
+        items: {
+          include: { product: true }
+        }
+      }
+    });
+
+    if (!order) return { success: false, message: "Order not found" };
+
+    return { success: true, order };
   } catch (error: any) {
     return { success: false, message: error.message };
   }

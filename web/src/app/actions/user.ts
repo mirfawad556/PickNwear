@@ -1,75 +1,21 @@
 "use server";
-import nodemailer from 'nodemailer';
-
-import fs from 'fs/promises';
-import { existsSync, copyFileSync } from 'fs';
-import os from 'os';
-import path from 'path';
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-
-const LOCAL_DB = path.join(process.cwd(), 'local-db.json');
-const TMP_DB = path.join(os.tmpdir(), 'local-db.json');
-
-function getDBPath() {
-  // Use /tmp only in production (Vercel) to avoid EROFS, keep local-db.json in development
-  const isVercel = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
-  if (isVercel) {
-    if (!existsSync(TMP_DB) && existsSync(LOCAL_DB)) {
-      try { copyFileSync(LOCAL_DB, TMP_DB); } catch(e) {}
-    }
-    return TMP_DB;
-  }
-  return LOCAL_DB;
-}
-
-async function getDB(retries = 3): Promise<any> {
-  try {
-    const data = await fs.readFile(getDBPath(), 'utf-8');
-    const parsed = JSON.parse(data);
-    if (!parsed.users) {
-      parsed.users = [];
-      try { await fs.writeFile(getDBPath(), JSON.stringify(parsed, null, 2)); } catch(e) {}
-    }
-    return parsed;
-  } catch (error: any) {
-    if (retries > 0) {
-      await new Promise(res => setTimeout(res, 150));
-      return getDB(retries - 1);
-    }
-    throw error;
-  }
-}
-
-async function saveDB(data: any, retries = 3): Promise<void> {
-  try {
-    await fs.writeFile(getDBPath(), JSON.stringify(data, null, 2));
-  } catch (error) {
-    if (retries > 0) {
-      await new Promise(res => setTimeout(res, 150));
-      return saveDB(data, retries - 1);
-    }
-    throw error;
-  }
-}
+import prisma from "@/lib/prisma";
 
 export async function signupUser(name: string, email: string, pass: string) {
   try {
-    const db = await getDB();
-    const existing = db.users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
+    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (existing) return { success: false, message: "Email already registered." };
 
     const hashedPassword = await bcrypt.hash(pass, 10);
-    const newUser = {
-      id: "user-" + Date.now(),
-      name,
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      createdAt: new Date().toISOString()
-    };
-
-    db.users.push(newUser);
-    await saveDB(db);
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+      }
+    });
 
     const cookieStore = await cookies();
     cookieStore.set("user_session", newUser.id, { secure: true, httpOnly: true });
@@ -82,9 +28,7 @@ export async function signupUser(name: string, email: string, pass: string) {
 
 export async function loginUser(email: string, pass: string) {
   try {
-    const db = await getDB();
-    const user = db.users.find((u: any) => u.email === email.toLowerCase());
-    
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) return { success: false, message: "User not found." };
 
     const isValid = await bcrypt.compare(pass, user.password);
@@ -105,8 +49,7 @@ export async function checkUserSession() {
     const userId = cookieStore.get("user_session")?.value;
     if (!userId) return null;
 
-    const db = await getDB();
-    const user = db.users.find((u: any) => u.id === userId);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       cookieStore.delete("user_session");
       return null;
@@ -129,12 +72,10 @@ export async function updateUserAddress(address: string) {
     const userId = cookieStore.get("user_session")?.value;
     if (!userId) return { success: false, message: "Not logged in" };
 
-    const db = await getDB();
-    const user = db.users.find((u: any) => u.id === userId);
-    if (!user) return { success: false, message: "User not found" };
-
-    user.address = address;
-    await saveDB(db);
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { address }
+    });
 
     return { success: true, address: user.address };
   } catch (error: any) {
@@ -144,69 +85,31 @@ export async function updateUserAddress(address: string) {
 
 export async function mockSendResetEmail(email: string) {
   try {
-    const db = await getDB();
-    const user = db.users.find((u: any) => u.email === email.toLowerCase());
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) return { success: false, message: "Email not found." };
     
-    // Generate secure token
     const resetToken = "reset-" + user.id + "-" + Date.now();
-    
-    // Store token in DB
-    user.resetToken = resetToken;
-    await saveDB(db);
-
-    // Prepare real email transport
-    const EMAIL_USER = process.env.EMAIL_USER;
-    const EMAIL_PASS = process.env.EMAIL_APP_PASSWORD;
-
-    if (!EMAIL_USER || !EMAIL_PASS) {
-      console.warn("SMTP credentials missing. Simulated success.");
-      // Just simulate success for Vercel demo so the user doesn't get blocked
-      return { success: true, token: resetToken, message: "Simulated reset email sent." };
-    };
-    }
-
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS
-      }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetCode: resetToken }
     });
 
-    const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
-
-    await transporter.sendMail({
-      from: `"PickNwear Support" <${EMAIL_USER}>`,
-      to: email,
-      subject: "Password Reset Request - PickNwear",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
-          <h2 style="color: #000; font-size: 24px; margin-bottom: 20px;">Reset Your Password</h2>
-          <p style="color: #555; font-size: 16px; margin-bottom: 30px;">Hi ${user.name}, you recently requested to reset your password for your PickNwear account. Click the button below to proceed.</p>
-          <a href="${resetUrl}" style="display: inline-block; padding: 14px 28px; background-color: #000; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Reset Password</a>
-          <p style="color: #999; font-size: 12px; margin-top: 40px;">If you did not request a password reset, please ignore this email.</p>
-        </div>
-      `
-    });
-
-    return { success: true, token: resetToken };
+    return { success: true, token: resetToken, message: "Simulated reset email sent." };
   } catch (error: any) {
-    console.error("Email Error:", error);
     return { success: false, message: error.message };
   }
 }
 
 export async function resetPassword(token: string, newPass: string) {
   try {
-    const db = await getDB();
-    const user = db.users.find((u: any) => u.resetToken === token);
-    
+    const user = await prisma.user.findFirst({ where: { resetCode: token } });
     if (!user) return { success: false, message: "Invalid or expired token." };
 
-    user.password = await bcrypt.hash(newPass, 10);
-    delete user.resetToken;
-    await saveDB(db);
+    const hashedPassword = await bcrypt.hash(newPass, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword, resetCode: null }
+    });
 
     return { success: true };
   } catch (error: any) {
