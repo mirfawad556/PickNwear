@@ -10,9 +10,11 @@ const LOCAL_DB = path.join(process.cwd(), 'local-db.json');
 const TMP_DB = path.join(os.tmpdir(), 'local-db.json');
 
 function getDBPath() {
-  if (process.env.VERCEL === '1') {
+  // Use /tmp only in production (Vercel) to avoid EROFS, keep local-db.json in development
+  const isVercel = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+  if (isVercel) {
     if (!existsSync(TMP_DB) && existsSync(LOCAL_DB)) {
-      copyFileSync(LOCAL_DB, TMP_DB);
+      try { copyFileSync(LOCAL_DB, TMP_DB); } catch(e) {}
     }
     return TMP_DB;
   }
