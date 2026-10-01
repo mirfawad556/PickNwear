@@ -17,6 +17,14 @@ export default function AuthModal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  
+  React.useEffect(() => {
+    if (!isAuthModalOpen) {
+      setError("");
+      setSuccess("");
+    }
+  }, [isAuthModalOpen]);
+
   if (!isAuthModalOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
