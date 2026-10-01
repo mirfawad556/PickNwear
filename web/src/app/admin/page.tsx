@@ -65,14 +65,14 @@ export default function AdminPage() {
   const fetchAdminProducts = async () => {
     setCollectionsLoading(true);
     const res = await getProducts();
-    if (res.success) setAdminProducts(res.products);
+    if (res.success) setAdminProducts(res.products || []);
     setCollectionsLoading(false);
   };
 
   const fetchRegisteredUsers = async () => {
     setUsersLoading(true);
     const res = await getAllUsers();
-    if (res.success) setRegisteredUsers(res.users);
+    if (res.success) setRegisteredUsers(res.users || []);
     setUsersLoading(false);
   };
 

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { checkUserSession, logoutUser } from '@/app/actions/user';
 
-type User = { id: string; name: string; email: string; address?: string };
+type User = { id: string; name: string | null; email: string; address?: string | null };
 
 type AuthContextType = {
   user: User | null;

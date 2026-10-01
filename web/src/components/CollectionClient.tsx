@@ -48,7 +48,7 @@ export default function CollectionClient() {
       try {
         const res = await getProducts();
         if (res.success) {
-          setDbProducts(res.products.map((p: any) => ({
+          setDbProducts((res.products || []).map((p: any) => ({
             ...p,
             tags: [p.clothingType, ...(p.colors ? p.colors.split(',').map((c:string) => c.trim()).filter(Boolean) : [])]
           })));

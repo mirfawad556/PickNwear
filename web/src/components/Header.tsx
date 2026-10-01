@@ -128,7 +128,7 @@ export default function Header() {
         <div className="flex items-center gap-3 md:gap-6 text-black relative z-10 w-auto justify-end">
           {user ? (
             <div className="relative flex items-center gap-3">
-              <span className="text-sm font-semibold hidden md:block text-black">Hi, {user.name.split(' ')[0]}</span>
+              <span className="text-sm font-semibold hidden md:block text-black">Hi, {(user.name || "User").split(' ')[0]}</span>
               <button 
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 aria-label="Profile Menu" 
