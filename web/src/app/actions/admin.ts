@@ -10,17 +10,9 @@ export async function addProduct(productData: any) {
   try {
     let imageUrl = productData.image;
 
+    // Store base64 string directly in Supabase to avoid Vercel read-only errors
     if (imageUrl && imageUrl.startsWith('data:image')) {
-      const matches = imageUrl.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-      if (matches && matches.length === 3) {
-        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
-        const buffer = Buffer.from(matches[2], 'base64');
-        const filename = `product-${Date.now()}.${ext}`;
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-        await fs.mkdir(uploadDir, { recursive: true });
-        await fs.writeFile(path.join(uploadDir, filename), buffer);
-        imageUrl = `/uploads/${filename}`;
-      }
+      imageUrl = productData.image; 
     }
 
     const newProduct = await prisma.product.create({
@@ -71,17 +63,9 @@ export async function deleteProduct(productId: string) {
 export async function updateProduct(productId: string, productData: any) {
   try {
     let imageUrl = productData.image;
+    // Store base64 string directly in Supabase to avoid Vercel read-only errors
     if (imageUrl && imageUrl.startsWith('data:image')) {
-      const matches = imageUrl.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-      if (matches && matches.length === 3) {
-        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
-        const buffer = Buffer.from(matches[2], 'base64');
-        const filename = `product-${Date.now()}.${ext}`;
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-        await fs.mkdir(uploadDir, { recursive: true });
-        await fs.writeFile(path.join(uploadDir, filename), buffer);
-        imageUrl = `/uploads/${filename}`;
-      }
+      imageUrl = productData.image;
     }
 
     const updatedProduct = await prisma.product.update({
