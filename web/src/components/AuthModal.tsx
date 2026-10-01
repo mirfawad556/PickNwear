@@ -95,9 +95,9 @@ export default function AuthModal() {
           </button>
 
           <h2 className="text-3xl font-serif font-bold text-center mb-6">
-            {authView === 'login' && "Welcome Back"}
-            {authView === 'signup' && "Create Account"}
-            {authView === 'forgot' && "Reset Password"}
+            {authView === 'login' && "Sign In to PickNwear"}
+            {authView === 'signup' && "Create an Account"}
+            {authView === 'forgot' && "Recover Password"}
           </h2>
 
           {error && (
