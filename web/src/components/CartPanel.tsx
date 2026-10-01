@@ -6,7 +6,7 @@ import { X, Trash2, Plus, Minus, ShoppingBag, CheckCircle, MapPin, Edit2 } from 
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { placeOrder } from '@/app/actions/order';
+import { createOrder } from '@/app/actions/order';
 import { updateUserAddress } from "@/app/actions/user";
 
 type CheckoutStep = 'CART' | 'CONFIRM_PURCHASE' | 'PAYMENT_DETAILS' | 'CONFIRM_ADDRESS' | 'SUCCESS';
@@ -45,7 +45,15 @@ export default function CartPanel() {
     if (!user) return;
     setIsPlacingOrder(true);
     const finalAddress = user.address || "No address provided";
-    const res = await placeOrder(cart, finalAddress, totalPrice);
+    const res = await createOrder({
+      total: totalPrice,
+      paymentMethod: "Cash on Delivery",
+      address: finalAddress,
+      email: user.email,
+      firstName: user.name?.split(" ")[0] || "Customer",
+      lastName: user.name?.split(" ").slice(1).join(" ") || "",
+      items: cart
+    });
     if (res.success) {
       await clearCart();
       setStep('SUCCESS');

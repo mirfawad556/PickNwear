@@ -9,7 +9,7 @@ import { ShoppingBag, User, MapPin, Check, X as XIcon, Edit2, Clock, Phone, Mail
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { updateUserAddress } from "@/app/actions/user";
-import { getUserPastOrders } from "@/app/actions/order";
+import { getUserOrders } from "@/app/actions/order";
 import { getContactDetails } from "@/app/actions/admin";
 
 export default function Header() {
@@ -85,7 +85,7 @@ export default function Header() {
     setIsProfileOpen(false);
     setIsPastOrdersOpen(true);
     setLoadingOrders(true);
-    const res = await getUserPastOrders();
+    const res = await getUserOrders();
     if (res.success) {
       setPastOrders(res.orders || []);
     }
