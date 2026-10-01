@@ -8,17 +8,24 @@ import { X } from "lucide-react";
 type SequenceState = "loading" | "popup" | "complete";
 
 export default function SplashScreen() {
-  const [sequence, setSequence] = useState<SequenceState>("loading");
+  const [sequence, setSequence] = useState<SequenceState>("complete"); // Default to complete to prevent hydration mismatch flashes
 
   useEffect(() => {
-    // 1. Logo loading sequence finishes after 2.5s
-    const timer = setTimeout(() => {
-      setSequence("popup");
-    }, 2500);
-    return () => clearTimeout(timer);
+    const hasSeenSplash = sessionStorage.getItem("splashSeen");
+    if (hasSeenSplash) {
+      setSequence("complete");
+    } else {
+      setSequence("loading");
+      // 1. Logo loading sequence finishes after 2.5s
+      const timer = setTimeout(() => {
+        setSequence("popup");
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleDismissPopup = () => {
+    sessionStorage.setItem("splashSeen", "true");
     setSequence("complete");
   };
 
